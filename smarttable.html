@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartTable Pay — Scan, see the bill, pay. Done.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#191512;
+    --ink-700:#4A4038;
+    --ink-500:#7A6F63;
+    --paper-0:#FDFBF6;
+    --paper-1:#F7F3EA;
+    --line:#E3DDCE;
+    --stamp-red:#D1453B;
+    --stamp-red-dim:#F4DCD9;
+    --paid-green:#1E8A5F;
+    --paid-green-dim:#DCEBE3;
+    --brass:#B8892B;
+    --shadow: 0 20px 40px -20px rgba(25,21,18,0.35);
+    --radius: 2px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper-0);
+    color:var(--ink-900);
+    font-family:'Work Sans', sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:700;
+    letter-spacing:0.01em;
+    margin:0;
+    text-transform:none;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+  }
+  a{color:inherit;}
+  img,svg{display:block;max-width:100%;}
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 32px;
+  }
+  section{padding:96px 0;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-500);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:1px;
+    background:var(--ink-500);
+    display:inline-block;
+  }
+  :focus-visible{
+    outline:2px solid var(--stamp-red);
+    outline-offset:3px;
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(253,251,246,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  nav.wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:18px;padding-bottom:18px;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;font-size:22px;
+    letter-spacing:0.01em;
+  }
+  .logo .dot{
+    width:9px;height:9px;background:var(--stamp-red);
+    display:inline-block;
+    animation:pulse-dot 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{background:var(--stamp-red);}
+    50%{background:var(--paid-green);}
+  }
+  .nav-links{
+    display:flex;gap:34px;
+    font-size:14.5px;font-weight:500;
+    list-style:none;margin:0;padding:0;
+  }
+  .nav-links a{text-decoration:none;color:var(--ink-700);position:relative;}
+  .nav-links a:hover{color:var(--ink-900);}
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;letter-spacing:0.03em;
+    text-decoration:none;
+    padding:11px 20px;
+    border:1px solid var(--ink-900);
+    display:inline-block;
+    transition:background .15s ease, color .15s ease, transform .1s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{background:var(--ink-900);color:var(--paper-0);}
+  .btn-primary:hover{background:var(--stamp-red);border-color:var(--stamp-red);}
+  .btn-ghost{background:transparent;color:var(--ink-900);}
+  .btn-ghost:hover{background:var(--ink-900);color:var(--paper-0);}
+  .btn:active{transform:translateY(1px);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:88px 0 60px;
+    border-bottom:1px solid var(--line);
+  }
+  .hero .wrap{
+    display:grid;
+    grid-template-columns:1.05fr 0.85fr;
+    gap:64px;
+    align-items:center;
+  }
+  .hero h1{
+    font-size:clamp(40px,5.4vw,68px);
+    line-height:0.98;
+    color:var(--ink-900);
+  }
+  .hero h1 em{
+    font-style:normal;color:var(--stamp-red);
+  }
+  .hero p.lede{
+    margin-top:26px;
+    max-width:46ch;
+    font-size:18px;
+    color:var(--ink-700);
+  }
+  .hero .cta-row{
+    display:flex;gap:14px;margin-top:36px;flex-wrap:wrap;
+  }
+  .hero .proof{
+    margin-top:44px;
+    display:flex;gap:28px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;color:var(--ink-500);
+    flex-wrap:wrap;
+  }
+  .hero .proof strong{color:var(--ink-900);font-size:15px;display:block;font-family:'Big Shoulders Display';font-weight:700;}
+
+  /* ---------- RECEIPT / PHONE SIGNATURE ---------- */
+  .phone-stage{
+    display:flex;justify-content:center;
+  }
+  .phone{
+    width:280px;
+    background:var(--ink-900);
+    border-radius:34px;
+    padding:14px 14px 22px;
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .phone::before{
+    content:"";
+    position:absolute;top:14px;left:50%;
+    transform:translateX(-50%);
+    width:60px;height:6px;border-radius:4px;
+    background:#000;opacity:0.6;
+  }
+  .phone-screen{
+    background:#0F0D0B;
+    border-radius:20px;
+    overflow:hidden;
+    padding:26px 14px 14px;
+    min-height:420px;
+    display:flex;flex-direction:column;
+    align-items:center;
+  }
+  .receipt{
+    background:var(--paper-0);
+    width:100%;
+    padding:22px 18px 18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-900);
+    position:relative;
+    box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);
+  }
+  .receipt::before{
+    content:"";
+    position:absolute;top:-1px;left:0;right:0;height:8px;
+    background:
+      linear-gradient(135deg, var(--paper-0) 50%, transparent 50%) 0 0/10px 10px,
+      linear-gradient(-135deg, var(--paper-0) 50%, transparent 50%) 0 0/10px 10px;
+    background-color:transparent;
+    transform:translateY(-100%);
+  }
+  .receipt .row{
+    display:flex;justify-content:space-between;
+    padding:2px 0;
+  }
+  .receipt .divider{
+    border-top:1px dashed var(--ink-500);
+    margin:8px 0;
+  }
+  .receipt .table-id{
+    font-family:'Big Shoulders Display';
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:0.04em;
+    margin-bottom:4px;
+  }
+  .receipt .total-row{
+    font-weight:600;font-size:14px;
+  }
+  .status-pill{
+    margin-top:16px;
+    display:flex;align-items:center;gap:8px;
+    justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;letter-spacing:0.04em;
+    padding:9px 10px;
+    border:1px solid var(--stamp-red);
+    color:var(--stamp-red);
+    transition:all .4s ease;
+  }
+  .status-pill .led{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--stamp-red);
+    transition:background .4s ease;
+  }
+  .status-pill.paid{
+    border-color:var(--paid-green);
+    color:var(--paid-green);
+  }
+  .status-pill.paid .led{background:var(--paid-green);}
+  @media (prefers-reduced-motion: reduce){
+    .logo .dot{animation:none;background:var(--paid-green);}
+  }
+
+  /* ---------- PROBLEM (tickets) ---------- */
+  .problem{background:var(--ink-900);color:var(--paper-0);border-bottom:1px solid var(--line);}
+  .problem .eyebrow{color:#B8ACA0;}
+  .problem .eyebrow::before{background:#B8ACA0;}
+  .problem h2{
+    font-size:clamp(30px,3.6vw,44px);
+    color:var(--paper-0);
+    max-width:20ch;
+    margin-bottom:48px;
+  }
+  .ticket-row{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:16px;
+  }
+  .ticket{
+    background:#231D18;
+    border:1px solid #3A322B;
+    padding:20px 16px 24px;
+    position:relative;
+    min-height:150px;
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .ticket .n{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;color:var(--stamp-red);letter-spacing:0.08em;
+  }
+  .ticket p{
+    font-size:14.5px;color:#E7E1D6;margin:10px 0 0;
+  }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:28px;
+    margin-top:56px;
+  }
+  .step{
+    border-top:2px solid var(--ink-900);
+    padding-top:20px;
+  }
+  .step .step-n{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;color:var(--stamp-red);
+    margin-bottom:14px;display:block;
+  }
+  .step h3{font-size:26px;margin-bottom:10px;}
+  .step p{color:var(--ink-700);font-size:15px;}
+
+  /* ---------- FEATURES (menu board) ---------- */
+  .features{background:var(--paper-1);border-bottom:1px solid var(--line);border-top:1px solid var(--line);}
+  .feature-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);
+    margin-top:48px;border:1px solid var(--line);
+  }
+  .feature{
+    background:var(--paper-0);
+    padding:26px 22px;
+    min-height:150px;
+  }
+  .feature .code{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;color:var(--brass);letter-spacing:0.06em;
+    margin-bottom:12px;display:block;
+  }
+  .feature h4{
+    font-family:'Big Shoulders Display';font-weight:700;font-size:19px;
+    margin-bottom:8px;
+  }
+  .feature p{font-size:13.8px;color:var(--ink-700);margin:0;}
+
+  /* ---------- FOR WHOM (split) ---------- */
+  .split{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border:1px solid var(--line);
+  }
+  .split-col{padding:40px 36px;}
+  .split-col.customers{border-right:1px solid var(--line);}
+  .split-col .tag{
+    font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.08em;
+    padding:4px 10px;display:inline-block;margin-bottom:18px;
+  }
+  .split-col.customers .tag{background:var(--paid-green-dim);color:var(--paid-green);}
+  .split-col.restaurants .tag{background:var(--stamp-red-dim);color:var(--stamp-red);}
+  .split-col h3{font-size:26px;margin-bottom:18px;}
+  .split-col ul{margin:0;padding:0;list-style:none;}
+  .split-col li{
+    padding:10px 0;border-top:1px solid var(--line);
+    font-size:14.8px;color:var(--ink-700);
+    display:flex;gap:10px;
+  }
+  .split-col li:first-child{border-top:none;}
+  .split-col li::before{content:"—";color:var(--ink-500);flex-shrink:0;}
+
+  /* ---------- PRICING ---------- */
+  .pricing-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+    margin-top:48px;
+  }
+  .price-card{
+    border:1px solid var(--ink-900);
+    padding:32px 26px;
+    display:flex;flex-direction:column;
+    background:var(--paper-0);
+  }
+  .price-card.featured{
+    border:2px solid var(--brass);
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .price-card.featured::before{
+    content:"MOST CHOSEN BY MULTI-OUTLET TEAMS";
+    position:absolute;top:-13px;left:26px;
+    background:var(--brass);color:var(--paper-0);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;letter-spacing:0.06em;
+    padding:4px 10px;
+  }
+  .price-card .tier{
+    font-family:'Big Shoulders Display';font-weight:700;font-size:24px;
+    margin-bottom:6px;
+  }
+  .price-card .tier-desc{font-size:13.5px;color:var(--ink-500);margin-bottom:22px;}
+  .price-card ul{list-style:none;margin:0 0 26px;padding:0;flex-grow:1;}
+  .price-card li{
+    font-size:14px;color:var(--ink-700);
+    padding:8px 0;border-top:1px dashed var(--line);
+  }
+  .price-card li:first-child{border-top:none;}
+  .price-note{
+    margin-top:28px;font-size:14.5px;color:var(--ink-700);
+    max-width:70ch;
+    border-left:2px solid var(--brass);padding-left:16px;
+  }
+
+  /* ---------- COMPETITIVE ---------- */
+  .compare-table{width:100%;border-collapse:collapse;margin-top:44px;font-size:14.5px;}
+  .compare-table th, .compare-table td{
+    text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  .compare-table th{
+    font-family:'IBM Plex Mono', monospace;font-size:11.5px;letter-spacing:0.06em;
+    color:var(--ink-500);text-transform:uppercase;font-weight:500;
+  }
+  .compare-table td.ours{font-weight:600;color:var(--paid-green);}
+  .check{color:var(--paid-green);font-family:'IBM Plex Mono';}
+  .cross{color:var(--ink-500);font-family:'IBM Plex Mono';}
+
+  /* ---------- SECURITY BADGES ---------- */
+  .badge-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);margin-top:44px;
+  }
+  .badge{
+    background:var(--ink-900);color:var(--paper-0);
+    padding:26px 22px;min-height:120px;
+  }
+  .badge .mono{font-size:11px;color:var(--brass);letter-spacing:0.06em;display:block;margin-bottom:10px;}
+  .badge p{font-size:13.5px;color:#D8D0C4;margin:0;}
+
+  /* ---------- PILOT TIMELINE ---------- */
+  .timeline{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+    margin-top:56px;position:relative;
+  }
+  .timeline::before{
+    content:"";position:absolute;top:9px;left:0;right:0;height:1px;background:var(--line);
+  }
+  .tl-item{padding-right:20px;position:relative;}
+  .tl-dot{
+    width:18px;height:18px;border-radius:50%;
+    background:var(--paper-0);border:2px solid var(--stamp-red);
+    margin-bottom:20px;position:relative;z-index:2;
+  }
+  .tl-item:nth-child(4) .tl-dot{border-color:var(--paid-green);}
+  .tl-week{font-family:'IBM Plex Mono';font-size:11.5px;color:var(--ink-500);margin-bottom:6px;display:block;}
+  .tl-item h4{font-family:'Big Shoulders Display';font-weight:700;font-size:18px;margin-bottom:8px;}
+  .tl-item p{font-size:13.8px;color:var(--ink-700);margin:0;}
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta{
+    background:var(--ink-900);color:var(--paper-0);text-align:center;
+    padding:110px 0;
+  }
+  .final-cta h2{
+    font-size:clamp(34px,5vw,58px);color:var(--paper-0);
+    max-width:16ch;margin:0 auto 28px;
+  }
+  .final-cta p{color:#C9BFB2;max-width:48ch;margin:0 auto 40px;font-size:16.5px;}
+  .final-cta .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  .final-cta .btn-ghost{border-color:var(--paper-0);color:var(--paper-0);}
+  .final-cta .btn-ghost:hover{background:var(--paper-0);color:var(--ink-900);}
+  .final-cta .btn-primary{background:var(--stamp-red);border-color:var(--stamp-red);}
+  .final-cta .btn-primary:hover{background:var(--paid-green);border-color:var(--paid-green);}
+
+  footer{
+    padding:36px 0;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'IBM Plex Mono', monospace;font-size:12.5px;color:var(--ink-500);
+    flex-wrap:wrap;gap:12px;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:980px){
+    .hero .wrap{grid-template-columns:1fr;gap:48px;}
+    .phone{margin:0 auto;}
+    .ticket-row{grid-template-columns:repeat(3,1fr);}
+    .ticket-row .ticket:nth-child(4),.ticket-row .ticket:nth-child(5){display:none;}
+    .steps{grid-template-columns:1fr;gap:36px;}
+    .feature-grid{grid-template-columns:repeat(2,1fr);}
+    .split{grid-template-columns:1fr;}
+    .split-col.customers{border-right:none;border-bottom:1px solid var(--line);}
+    .pricing-grid{grid-template-columns:1fr;}
+    .badge-row{grid-template-columns:repeat(2,1fr);}
+    .timeline{grid-template-columns:repeat(2,1fr);row-gap:32px;}
+    .timeline::before{display:none;}
+    .nav-links{display:none;}
+  }
+  @media (max-width:560px){
+    section{padding:64px 0;}
+    .wrap{padding:0 20px;}
+    .ticket-row{grid-template-columns:repeat(2,1fr);}
+    .feature-grid{grid-template-columns:1fr;}
+    .badge-row{grid-template-columns:1fr;}
+    .compare-table{font-size:13px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="logo"><span class="dot"></span>SmartTable Pay</div>
+    <ul class="nav-links">
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#pilot">Pilot</a></li>
+    </ul>
+    <a href="#cta" class="btn btn-primary">Book a pilot</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">QR dining &amp; payment · Built for Kenya</div>
+      <h1>Nobody should<br>wait for <em>the bill.</em></h1>
+      <p class="lede">SmartTable Pay puts a QR code on every table. Customers scan, see an itemised bill instantly, and pay with M-Pesa or card — no app, no flagging down a waiter with a card machine.</p>
+      <div class="cta-row">
+        <a href="#cta" class="btn btn-primary">Book a pilot in Nairobi</a>
+        <a href="#how" class="btn btn-ghost">See how scanning works</a>
+      </div>
+      <div class="proof">
+        <div><strong>0</strong>app downloads required</div>
+        <div><strong>M-Pesa</strong>first payment flow</div>
+        <div><strong>6–8 wks</strong>to a live pilot</div>
+      </div>
+    </div>
+    <div class="phone-stage">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="receipt">
+            <div class="table-id">TABLE 07</div>
+            <div class="mono" style="color:var(--ink-500); font-size:11px;">SCAN · 14:22</div>
+            <div class="divider"></div>
+            <div class="row"><span>Nyama Choma x1</span><span>850</span></div>
+            <div class="row"><span>Ugali</span><span>100</span></div>
+            <div class="row"><span>Soda x2</span><span>160</span></div>
+            <div class="divider"></div>
+            <div class="row"><span>Subtotal</span><span>1,110</span></div>
+            <div class="row"><span>VAT 16%</span><span>178</span></div>
+            <div class="divider"></div>
+            <div class="row total-row"><span>TOTAL</span><span>KES 1,288</span></div>
+          </div>
+          <div class="status-pill" id="statusPill"><span class="led"></span><span id="statusText">UNPAID — SCAN TO PAY</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="wrap">
+    <div class="eyebrow">The problem</div>
+    <h2>Every wasted minute at the table has a name.</h2>
+    <div class="ticket-row">
+      <div class="ticket"><span class="n mono">01</span><p>Waiting to flag a server for the bill.</p></div>
+      <div class="ticket"><span class="n mono">02</span><p>Waiting again for the card machine to arrive.</p></div>
+      <div class="ticket"><span class="n mono">03</span><p>Staff overloaded during peak hours.</p></div>
+      <div class="ticket"><span class="n mono">04</span><p>Tables sitting occupied after the meal is done.</p></div>
+      <div class="ticket"><span class="n mono">05</span><p>Slower turnover, lower revenue per table.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="eyebrow">How it works</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px); max-width:24ch;">Three steps, no new hardware for the customer.</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-n mono">01 / SCAN</span>
+        <h3>Scan the table's code</h3>
+        <p>Every table carries its own QR code. Customers scan it with any phone camera — no app to install, no account to create.</p>
+      </div>
+      <div class="step">
+        <span class="step-n mono">02 / REVIEW</span>
+        <h3>See the itemised bill</h3>
+        <p>The order, quantities, tax and service charge appear instantly — the same bill a server would print, just on the customer's own screen.</p>
+      </div>
+      <div class="step">
+        <span class="step-n mono">03 / PAY</span>
+        <h3>Pay with M-Pesa or card</h3>
+        <p>One tap sends an STK push, or the customer pays by card. Staff see the table settle in real time — no reconciliation needed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="eyebrow">What's included</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px);">Everything a table needs to settle itself.</h2>
+    <div class="feature-grid">
+      <div class="feature"><span class="code mono">SP-01</span><h4>Table QR codes</h4><p>A unique, printable code assigned to every table in the house.</p></div>
+      <div class="feature"><span class="code mono">SP-02</span><h4>Live itemised bill</h4><p>Order, quantities and totals rendered the moment the code is scanned.</p></div>
+      <div class="feature"><span class="code mono">SP-03</span><h4>M-Pesa &amp; card payment</h4><p>STK push as the primary method, card as a secondary option.</p></div>
+      <div class="feature"><span class="code mono">SP-04</span><h4>Instant digital receipts</h4><p>Generated automatically the moment payment clears.</p></div>
+      <div class="feature"><span class="code mono">SP-05</span><h4>Restaurant dashboard</h4><p>Live view of which tables are paid, pending, or still dining.</p></div>
+      <div class="feature"><span class="code mono">SP-06</span><h4>Payment notifications</h4><p>Staff are notified the second a table settles — no walking over to check.</p></div>
+      <div class="feature"><span class="code mono">SP-07</span><h4>Sales &amp; revenue reporting</h4><p>Daily, weekly and per-table reporting built in from day one.</p></div>
+      <div class="feature"><span class="code mono">SP-08</span><h4>Post-payment feedback</h4><p>An optional one-tap prompt for a rating right after payment.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Who it's for</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px); margin-bottom:8px;">Built for both sides of the table.</h2>
+    <div class="split" style="margin-top:40px;">
+      <div class="split-col customers">
+        <span class="tag mono">FOR CUSTOMERS</span>
+        <h3>Leave whenever you're ready.</h3>
+        <ul>
+          <li>No waiting for a bill or a card machine.</li>
+          <li>Pay in seconds with M-Pesa or a bank card.</li>
+          <li>Receipts saved automatically, no paper to lose.</li>
+          <li>Works in any browser — nothing to download.</li>
+        </ul>
+      </div>
+      <div class="split-col restaurants">
+        <span class="tag mono">FOR RESTAURANTS</span>
+        <h3>Turn tables faster, reconcile less.</h3>
+        <ul>
+          <li>Faster table turnover during peak hours.</li>
+          <li>Less manual billing work for serving staff.</li>
+          <li>Real-time visibility into which tables are settled.</li>
+          <li>Built-in sales and revenue reporting.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="eyebrow">Business model</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px);">Low barrier to start. Predictable at scale.</h2>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="tier">Starter</div>
+        <div class="tier-desc mono">Single outlet</div>
+        <ul>
+          <li>Core QR billing &amp; payment</li>
+          <li>M-Pesa &amp; card checkout</li>
+          <li>Digital receipts</li>
+          <li>Basic dashboard</li>
+        </ul>
+      </div>
+      <div class="price-card featured">
+        <div class="tier">Growth</div>
+        <div class="tier-desc mono">Multi-outlet teams</div>
+        <ul>
+          <li>Everything in Starter</li>
+          <li>Multi-outlet management</li>
+          <li>Full analytics dashboard</li>
+          <li>Customer feedback module</li>
+        </ul>
+      </div>
+      <div class="price-card">
+        <div class="tier">Enterprise</div>
+        <div class="tier-desc mono">Chains &amp; hotel groups</div>
+        <ul>
+          <li>Everything in Growth</li>
+          <li>POS / API integration</li>
+          <li>Custom branding</li>
+          <li>Dedicated support</li>
+        </ul>
+      </div>
+    </div>
+    <p class="price-note">Every plan carries a small transaction fee (1.0–1.5%) on top of standard M-Pesa or card processing costs. Subscriptions are optional, for outlets that prefer a predictable monthly cost. A one-time setup fee covers QR codes, table tents and staff training — waived for pilot partners.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Competitive landscape</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px);">Where SmartTable Pay sits.</h2>
+    <table class="compare-table">
+      <thead>
+        <tr><th>Approach</th><th>Itemised digital bill</th><th>No app download</th><th>M-Pesa-first</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Till / Paybill + manual reconciliation</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>POS-integrated payment add-ons</td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td>varies</td></tr>
+        <tr><td>Global QR-ordering platforms</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="cross">—</span></td></tr>
+        <tr><td class="ours">SmartTable Pay</td><td class="ours">✓</td><td class="ours">✓</td><td class="ours">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Security &amp; compliance</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px);">Handles money carefully, by design.</h2>
+    <div class="badge-row">
+      <div class="badge"><span class="mono">DPA 2019</span><p>Compliant with the Kenya Data Protection Act — data minimisation and consent by default.</p></div>
+      <div class="badge"><span class="mono">TLS / SSL</span><p>All data encrypted in transit and at rest.</p></div>
+      <div class="badge"><span class="mono">PCI-DSS</span><p>Card details never touch our servers — routed through a compliant gateway.</p></div>
+      <div class="badge"><span class="mono">RBAC</span><p>Role-based dashboard access for cashier, manager and owner.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pilot">
+  <div class="wrap">
+    <div class="eyebrow">Pilot plan</div>
+    <h2 style="font-size:clamp(30px,3.6vw,44px);">2–3 Nairobi restaurants. Six to eight weeks.</h2>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot"></div><span class="tl-week mono">WEEK 1</span><h4>Setup</h4><p>QR codes printed, tables mapped, accounts configured.</p></div>
+      <div class="tl-item"><div class="tl-dot"></div><span class="tl-week mono">WEEK 2</span><h4>Staff training</h4><p>Front-of-house walked through the standalone workflow.</p></div>
+      <div class="tl-item"><div class="tl-dot"></div><span class="tl-week mono">WEEKS 3–6</span><h4>Live operation</h4><p>Real tables, real payments, real feedback collected.</p></div>
+      <div class="tl-item"><div class="tl-dot"></div><span class="tl-week mono">WEEKS 7–8</span><h4>Review</h4><p>Wait times, staff time saved and payment success rates measured.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta" id="cta">
+  <div class="wrap">
+    <h2>Ready to stop making customers wait?</h2>
+    <p>We're onboarding 2–3 pilot restaurants in Nairobi now. Setup and staff training are on us for pilot partners.</p>
+    <div class="cta-row">
+      <a href="mailto:hello@smarttablepay.co.ke" class="btn btn-primary">Book a pilot</a>
+      <a href="#features" class="btn btn-ghost">Review the features</a>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <div>SMARTTABLE PAY © 2026</div>
+  <div>NAIROBI, KENYA</div>
+</footer>
+
+<script>
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var pill = document.getElementById('statusPill');
+    var text = document.getElementById('statusText');
+    if(reduce){
+      pill.classList.add('paid');
+      text.textContent = 'PAID — TABLE SETTLED';
+      return;
+    }
+    var paid = false;
+    setInterval(function(){
+      paid = !paid;
+      pill.classList.toggle('paid', paid);
+      text.textContent = paid ? 'PAID — TABLE SETTLED' : 'UNPAID — SCAN TO PAY';
+    }, 3200);
+  })();
+</script>
+
+</body>
+</html>
